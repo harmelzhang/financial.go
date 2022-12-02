@@ -4,6 +4,7 @@ package models
 type Stock struct {
 	Code                string   // 股票代码
 	StockName           string   // 股票名称
+	StockNamePinyin     string   // 股票名称（拼音）
 	CompanyName         string   // 公司名称
 	Organization        string   // 组织形式（民营、国营...）
 	Region              string   // 地域（省份）

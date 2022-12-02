@@ -8,7 +8,7 @@ import (
 
 // Get 请求网络资源，HTTP : GET
 func Get(url string) []byte {
-	log.Printf("HTTP GET : %s", url)
+	log.Printf("HTTP REQUEST [GET] : %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatalf("执行出错 : %s", err)
