@@ -1,6 +1,7 @@
-package config
+package index
 
 import (
+	"financial/config"
 	"financial/utils/http"
 	"financial/utils/tools"
 	"financial/utils/xls"
@@ -27,10 +28,7 @@ var IndexTypeMap = map[IndexType]string{
 	HLZS:  "红利指数",
 }
 
-// 指数样本信息获取地址
-var indexUrlPrefix = "https://csi-web-dev.oss-cn-shanghai-finance-1-pub.aliyuncs.com"
-var indexUrlLocation = "/static/html/csindex/public/uploads/file/autofile/cons/%scons.xls"
-var indexUrlTemplate = indexUrlPrefix + indexUrlLocation
+// 指数样本信息
 var indexUrlMap = map[IndexType]string{}
 
 // 指数样本信息
@@ -39,7 +37,7 @@ var indexStockMap = make(map[IndexType][]string)
 func init() {
 	// 初始化指数样本信息地址
 	for indexType, _ := range IndexTypeMap {
-		indexUrlMap[indexType] = fmt.Sprintf(indexUrlTemplate, indexType)
+		indexUrlMap[indexType] = fmt.Sprintf(config.FetchIndexUrlTemplate, indexType)
 	}
 
 	log.Println("初始化主要指数样本信息")
@@ -48,14 +46,6 @@ func init() {
 		stockCodes := tools.FetchColData(data, 4)
 		indexStockMap[indexType] = append(indexStockMap[indexType], stockCodes...)
 	}
-
-	indexIntoDatabase()
-}
-
-// 指数信息插入数据库
-func indexIntoDatabase() {
-	// TODO 删除数据库旧数据
-	// TODO 新数据插入数据库
 }
 
 // GetStockIndexTypes 获取指定股票指数类型

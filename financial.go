@@ -1,12 +1,11 @@
 package main
 
 import (
-	"financial/config"
-	"fmt"
+	"financial/config/category"
 )
 
 func main() {
-	for _, category := range config.GetCategorys() {
-		fmt.Println(category.Id, category.Name)
+	for _, category := range category.GetCategorys() {
+		category.GetStocks()
 	}
 }

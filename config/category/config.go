@@ -1,7 +1,8 @@
-package config
+package category
 
 import (
 	"bytes"
+	"financial/config"
 	"financial/models"
 	"financial/utils/http"
 	"financial/utils/tools"
@@ -10,12 +11,11 @@ import (
 	"strings"
 )
 
-var categoryUrl = "http://quotes.money.163.com/old"
 var categorys = make([]models.Category, 0)
 
 func init() {
 	log.Println("初始化证监会行业分类信息")
-	root, err := htmlquery.Parse(bytes.NewReader(http.Get(categoryUrl)))
+	root, err := htmlquery.Parse(bytes.NewReader(http.Get(config.FetchCategoryUrl)))
 	if err != nil {
 		log.Fatalf("解析HTML出错 : %s", err)
 	}
