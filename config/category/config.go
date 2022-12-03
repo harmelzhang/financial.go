@@ -21,23 +21,30 @@ func init() {
 	}
 
 	nodes := htmlquery.Find(root, "//*[@id=\"f0-f7\"]/ul/li")
+	var categoryOrder uint8 = 1
 	for _, node := range nodes {
 		categoryId := strings.Split(tools.FindAttrVal(node, "qquery"), ":")[1]
 		categoryName := tools.FindAttrVal(htmlquery.Find(node, "./a[1]")[0], "title")
 		category := models.Category{
-			Id:   categoryId,
-			Name: categoryName,
+			Id:           categoryId,
+			Name:         categoryName,
+			DisplayOrder: categoryOrder,
 		}
 		categorys = append(categorys, category)
+		categoryOrder++
+
+		var subCategoryOrder uint8 = 1
 		for _, subNode := range htmlquery.Find(node, "./ul/li") {
 			subCategoryId := tools.FindAttrVal(subNode, "qid")
 			subCategoryName := tools.FindAttrVal(htmlquery.Find(subNode, "./a[1]")[0], "title")
 			subCategory := models.Category{
-				Id:       subCategoryId,
-				Name:     subCategoryName,
-				ParentId: categoryId,
+				Id:           subCategoryId,
+				Name:         subCategoryName,
+				DisplayOrder: subCategoryOrder,
+				ParentId:     categoryId,
 			}
 			categorys = append(categorys, subCategory)
+			subCategoryOrder++
 		}
 	}
 }

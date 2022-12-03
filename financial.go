@@ -1,11 +1,16 @@
 package main
 
 import (
-	"financial/config/category"
+	categoryConfig "financial/config/category"
 )
 
 func main() {
-	for _, category := range category.GetCategorys() {
-		category.GetStocks()
+	for _, category := range categoryConfig.GetCategorys() {
+		category.IntoDb()
+		stocks := category.GetStocks()
+		for _, stock := range stocks {
+			stock.BuildStockInfo()
+			stock.IntoDb()
+		}
 	}
 }
