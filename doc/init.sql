@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS `index`;
 CREATE TABLE `index` (
     `type_code` VARCHAR(20) NOT NULL COMMENT '类型代码（中证指数，www.csindex.com.cn）',
     `type_name` VARCHAR(20) NOT NULL COMMENT '类型名称（沪深300、中证500、上证50....）',
-    `stock_code` CHAR(6) NOT NULL COMMENT '股票代码',
+    `stock_code` CHAR(6) NOT NULL COMMENT '股票代码'
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='指数样本信息（来源：中证指数）';
 
 DROP TABLE IF EXISTS `category`;
