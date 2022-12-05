@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"github.com/mozillazg/go-pinyin"
 	"golang.org/x/net/html"
 	"log"
 )
@@ -41,4 +42,16 @@ func FindAttrVal(node *html.Node, attrName string) string {
 		log.Fatalln("找不到指定属性")
 	}
 	return value
+}
+
+// GetPinyinFirstWord 获取拼音首字母
+func GetPinyinFirstWord(words string) string {
+	result := ""
+	pyArgs := pinyin.NewArgs()
+	for _, word := range pinyin.Pinyin(words, pyArgs) {
+		for _, w := range word {
+			result += w[:1]
+		}
+	}
+	return result
 }

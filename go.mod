@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/antchfx/htmlquery v1.2.5
 	github.com/extrame/xls v0.0.1
+	github.com/mozillazg/go-pinyin v0.19.0
 	golang.org/x/net v0.2.0
 )
 

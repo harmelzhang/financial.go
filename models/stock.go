@@ -136,11 +136,18 @@ func (stock *Stock) BuildStockInfo() {
 		fetchNeteaseData()
 	}
 
-	stock.StockNamePinyin = "TODO"
+	stock.StockNamePinyin = tools.GetPinyinFirstWord(stock.StockName)
 	stock.MarketPlace = marketPlaceName
+
+	stock.IntoDb()
 }
 
 // IntoDb 更新数据库
 func (stock *Stock) IntoDb() {
+
+}
+
+// FetchFinancialInfo 获取财务信息
+func (stock *Stock) FetchFinancialInfo() {
 
 }
