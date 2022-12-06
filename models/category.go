@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"financial/config"
+	"financial/utils/db"
 	"financial/utils/http"
 	"fmt"
 	"log"
@@ -12,7 +13,7 @@ import (
 type Category struct {
 	Id           string // 行业ID（网易财经）
 	Name         string // 名称
-	DisplayOrder uint8  //显示顺序
+	DisplayOrder uint8  // 显示顺序
 	ParentId     string // 父分类ID
 }
 
@@ -58,5 +59,10 @@ func (category *Category) GetStocks() []*Stock {
 
 // IntoDb 更新数据库
 func (category *Category) IntoDb() {
-
+	sql := "REPLACE INTO category(id, name, display_order, parent_id) VALUES(?, ?, ?, ?)"
+	args := []interface{}{category.Id, category.Name, category.DisplayOrder, category.ParentId}
+	if category.ParentId == "" {
+		args[len(args)-1] = nil
+	}
+	db.ExecSQL(sql, args...)
 }

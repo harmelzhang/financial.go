@@ -17,3 +17,21 @@ func getConnection() *sql.DB {
 	}
 	return db
 }
+
+// ExecSQL 执行SQL
+func ExecSQL(sql string, args ...any) *sql.Rows {
+	db := getConnection()
+	defer func() {
+		_ = db.Close()
+	}()
+
+	rows, err := db.Query(sql, args...)
+	if err != nil {
+		log.Fatalf("SQL执行出错 : %s", err)
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	return rows
+}
