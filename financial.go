@@ -2,6 +2,7 @@ package main
 
 import (
 	categoryConfig "financial/config/category"
+	_ "financial/config/indexSample"
 )
 
 func main() {

@@ -1,7 +1,9 @@
-package index
+package indexSample
 
 import (
 	"financial/config"
+	"financial/models"
+	"financial/utils/db"
 	"financial/utils/http"
 	"financial/utils/tools"
 	"financial/utils/xls"
@@ -36,15 +38,29 @@ var indexStockMap = make(map[Type][]string)
 
 func init() {
 	// 初始化指数样本信息地址
-	for Type, _ := range TypeMap {
-		indexUrlMap[Type] = fmt.Sprintf(config.FetchIndexUrlTemplate, Type)
+	for indexType, _ := range TypeMap {
+		indexUrlMap[indexType] = fmt.Sprintf(config.FetchIndexUrlTemplate, indexType)
 	}
 
 	log.Println("初始化主要指数样本信息")
-	for Type, url := range indexUrlMap {
+	for indexType, url := range indexUrlMap {
 		data := xls.ReadXls(http.Get(url), 0, 0)
 		stockCodes := tools.FetchColData(data, 4)
-		indexStockMap[Type] = append(indexStockMap[Type], stockCodes...)
+		indexStockMap[indexType] = append(indexStockMap[indexType], stockCodes...)
+	}
+
+	// 清空数据
+	db.ExecSQL("DELETE FROM index_sample")
+	// 插入数据
+	for indexType, stockCodes := range indexStockMap {
+		for _, stockCode := range stockCodes {
+			indexSample := models.IndexSample{
+				TypeCode:  string(indexType),
+				TypeName:  TypeMap[indexType],
+				StockCode: stockCode,
+			}
+			indexSample.IntoDb()
+		}
 	}
 }
 
