@@ -4,6 +4,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 	"golang.org/x/net/html"
 	"log"
+	"strings"
 )
 
 // IndexOf 查询指定元素在数组中的位置
@@ -51,6 +52,24 @@ func GetPinyinFirstWord(words string) string {
 	for _, word := range pinyin.Pinyin(words, pyArgs) {
 		for _, w := range word {
 			result += w[:1]
+		}
+	}
+	return result
+}
+
+// HumpToUnderline 驼峰转下划线
+func HumpToUnderline(word string) string {
+	result := ""
+	for i, w := range word {
+		s := strings.ToLower(string(w))
+		if i == 0 {
+			result += s
+			continue
+		}
+		if 'A' <= w && w <= 'Z' {
+			result += "_" + s
+		} else {
+			result += s
 		}
 	}
 	return result
