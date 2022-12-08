@@ -39,8 +39,11 @@ var BeijingMarketPrefixs = []string{"82", "83", "87", "88"}
 
 // ----- 数据库配置 -----
 
-const DB_HOST = "127.0.0.1"  // 服务器地址
-const DB_PORT = 3306         // 端口
-const DB_USERNAME = "root"   // 用户名
-const DB_PASSWORD = "123456" // 密码
-const DB_NAME = "financial"  // 数据库名称
+const DB_HOST = "127.0.0.1"   // 服务器地址
+const DB_PORT = 3306          // 端口
+const DB_USERNAME = "root"    // 用户名
+const DB_PASSWORD = "123456"  // 密码
+const DB_NAME = "financial"   // 数据库名称
+const DB_MAX_IDLE_CONNS = 100 // 最大空闲连接数
+const DB_MAX_IDLE_TIME = 2    // 连接最大空闲时长（单位：分）
+const DB_MAX_LIFE_TIME = 1    // 连接最大存活时长（单位：分）
