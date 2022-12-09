@@ -46,7 +46,7 @@ func (category *Category) GetStocks() []*Stock {
 			code := stockCode.(map[string]interface{})
 			symbol := code["SYMBOL"].(string)
 			stock := &Stock{
-				Code:     symbol,
+				Code:     NewValue(symbol),
 				Category: Category{Id: category.Id, Name: category.Name, ParentId: category.ParentId},
 			}
 			stocks = append(stocks, stock)

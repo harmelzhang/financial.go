@@ -35,15 +35,15 @@ var ShanghaiMarketPrefixs = []string{"60", "68"}
 var ShenzhenMarketPrefixs = []string{"00", "30"}
 
 // BeijingMarketPrefixs 北交所股票前缀
-var BeijingMarketPrefixs = []string{"82", "83", "87", "88"}
+var BeijingMarketPrefixs = []string{"82", "83", "87", "88", "43"}
 
 // ----- 数据库配置 -----
 
-const DB_HOST = "127.0.0.1"   // 服务器地址
-const DB_PORT = 3306          // 端口
-const DB_USERNAME = "root"    // 用户名
-const DB_PASSWORD = "123456"  // 密码
-const DB_NAME = "financial"   // 数据库名称
-const DB_MAX_IDLE_CONNS = 100 // 最大空闲连接数
-const DB_MAX_IDLE_TIME = 2    // 连接最大空闲时长（单位：分）
-const DB_MAX_LIFE_TIME = 1    // 连接最大存活时长（单位：分）
+const DbHost = "127.0.0.1"  // 服务器地址
+const DbPort = 3306         // 端口
+const DbUsername = "root"   // 用户名
+const DbPassword = "123456" // 密码
+const DbName = "financial"  // 数据库名称
+const DbMaxIdleConns = 100  // 最大空闲连接数
+const DbMaxIdleTime = 2     // 连接最大空闲时长（单位：分）
+const DbMaxLifeTime = 1     // 连接最大存活时长（单位：分）

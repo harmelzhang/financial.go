@@ -14,11 +14,11 @@ var err error
 
 // 初始化数据库连接
 func init() {
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", config.DB_USERNAME, config.DB_PASSWORD, config.DB_HOST, config.DB_PORT, config.DB_NAME)
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", config.DbUsername, config.DbPassword, config.DbHost, config.DbPort, config.DbName)
 	db, err = sql.Open("mysql", dataSource)
-	db.SetMaxIdleConns(config.DB_MAX_IDLE_CONNS)
-	db.SetConnMaxIdleTime(config.DB_MAX_IDLE_TIME * time.Minute)
-	db.SetConnMaxLifetime(config.DB_MAX_LIFE_TIME * time.Minute)
+	db.SetMaxIdleConns(config.DbMaxIdleConns)
+	db.SetConnMaxIdleTime(config.DbMaxIdleTime * time.Minute)
+	db.SetConnMaxLifetime(config.DbMaxLifeTime * time.Minute)
 	if err != nil {
 		log.Fatalf("数据库连接出错 : %s", err)
 	}

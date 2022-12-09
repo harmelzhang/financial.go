@@ -30,7 +30,7 @@ CREATE TABLE `stock` (
     `company_name` VARCHAR(50) DEFAULT NULL COMMENT '公司名称',
     `organization` VARCHAR(16) DEFAULT NULL COMMENT '组织形式（民营、国营...）',
     `region` VARCHAR(8) DEFAULT NULL COMMENT '地域（省份）',
-    `address` VARCHAR(50) DEFAULT NULL COMMENT '办公地址',
+    `address` VARCHAR(100) DEFAULT NULL COMMENT '办公地址',
     `website` VARCHAR(50) DEFAULT NULL COMMENT '公司网站',
     `main_business` TEXT DEFAULT NULL COMMENT '主营业务',
     `business_scope` TEXT DEFAULT NULL COMMENT '经营范围',
