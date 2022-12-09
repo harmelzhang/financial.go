@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Stock 股票
+// Stock 股票信息
 type Stock struct {
 	Code                string   // 股票代码
 	StockName           string   // 股票名称
