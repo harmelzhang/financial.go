@@ -4,6 +4,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 	"golang.org/x/net/html"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -73,4 +74,33 @@ func HumpToUnderline(word string) string {
 		}
 	}
 	return result
+}
+
+// FileIsExist 判断文件是否存在
+func FileIsExist(path string) bool {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
+}
+
+// ReadFile 读取文件
+func ReadFile(path string) []byte {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("读取文件出错 : %s", err)
+	}
+	return data
+}
+
+// WriteFile 写文件
+func WriteFile(path string, data []byte) {
+	err := os.WriteFile(path, data, 0666)
+	if err != nil {
+		log.Fatalf("写文件出错 : %s", err)
+	}
 }

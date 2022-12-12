@@ -37,6 +37,9 @@ var ShenzhenMarketPrefixs = []string{"00", "30"}
 // BeijingMarketPrefixs 北交所股票前缀
 var BeijingMarketPrefixs = []string{"82", "83", "87", "88", "43"}
 
+// ExcludeStockCodePrefix 排除的股票（B股、场内基金）
+var ExcludeStockCodePrefix = []string{"1", "2", "5", "9"}
+
 // ----- 数据库配置 -----
 
 const DbHost = "127.0.0.1"  // 服务器地址
@@ -47,3 +50,8 @@ const DbName = "financial"  // 数据库名称
 const DbMaxIdleConns = 100  // 最大空闲连接数
 const DbMaxIdleTime = 2     // 连接最大空闲时长（单位：分）
 const DbMaxLifeTime = 1     // 连接最大存活时长（单位：分）
+
+// ----- 爬取进度 -----
+
+const ProgressFileName = "progress.json" // 配置文件路径
+const TaskIntervalDay = 7                // 任务周期天数

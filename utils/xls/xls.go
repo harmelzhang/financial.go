@@ -2,7 +2,6 @@ package xls
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/shakinm/xlsReader/xls"
 	"log"
 )
@@ -34,7 +33,6 @@ func ReadXls(data []byte, sheetIndex int, skipRow int) [][]string {
 		for _, cellData := range row.GetCols() {
 			rowData = append(rowData, cellData.GetString())
 		}
-		fmt.Println("ROW: ", rowData)
 		sheetData = append(sheetData, rowData)
 	}
 

@@ -19,7 +19,7 @@ CREATE TABLE `category` (
     `parent_id` CHAR(8) DEFAULT NULL COMMENT '父分类ID',
     PRIMARY KEY (`id`),
     KEY `i_parent_id` (`parent_id`) USING BTREE,
-    CONSTRAINT `fk_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='证监会行业分类';
 
 DROP TABLE IF EXISTS `stock`;
@@ -30,7 +30,7 @@ CREATE TABLE `stock` (
     `company_name` VARCHAR(50) DEFAULT NULL COMMENT '公司名称',
     `organization` VARCHAR(16) DEFAULT NULL COMMENT '组织形式（民营、国营...）',
     `region` VARCHAR(8) DEFAULT NULL COMMENT '地域（省份）',
-    `address` VARCHAR(100) DEFAULT NULL COMMENT '办公地址',
+    `address` TEXT DEFAULT NULL COMMENT '办公地址',
     `website` VARCHAR(50) DEFAULT NULL COMMENT '公司网站',
     `main_business` TEXT DEFAULT NULL COMMENT '主营业务',
     `business_scope` TEXT DEFAULT NULL COMMENT '经营范围',

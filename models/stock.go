@@ -50,13 +50,13 @@ func (stock *Stock) GetStockMarketPlace() (string, string) {
 
 // BuildStockInfo 查询股票信息
 func (stock *Stock) BuildStockInfo() {
-	log.Printf("查询股票 [%s] 基本信息", stock.Code)
+	log.Printf("查询股票 [%s %s] 基本信息", stock.Category.Name, stock.Code.String())
 
 	marketPlaceName, marketPlaceShortName := stock.GetStockMarketPlace()
 
-	url := fmt.Sprintf(config.FetchStockBaseInfoNeteaseUrl, stock.Code)
+	url := fmt.Sprintf(config.FetchStockBaseInfoNeteaseUrl, stock.Code.String())
 	if marketPlaceShortName == "BJ" {
-		url = fmt.Sprintf(config.FetchStockBaseInfoEastmoneyUrl, marketPlaceShortName, stock.Code)
+		url = fmt.Sprintf(config.FetchStockBaseInfoEastmoneyUrl, marketPlaceShortName, stock.Code.String())
 	}
 
 	data := http.Get(url)
