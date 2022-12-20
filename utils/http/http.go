@@ -1,15 +1,25 @@
 package http
 
 import (
+	"financial/config"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
 // Get 请求网络资源，HTTP : GET
 func Get(url string) []byte {
 	log.Printf("HTTP REQUEST [GET] : %s", url)
-	resp, err := http.Get(url)
+
+	// resp, err := http.Get(url)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Accept", config.HttpAccept)
+	req.Header.Add("User-Agent", config.UserAgent[rand.Intn(len(config.UserAgent))])
+	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Fatalf("执行出错 : %s", err)
 	}
