@@ -36,10 +36,15 @@ func main() {
 	}
 
 	for _, category := range categoryConfig.GetCategorys() {
-		category.IntoDb()
+		if category.Exist() {
+			category.UpdateDb()
+		} else {
+			category.IntoDb()
+		}
 
 		stocks := category.GetStocks()
 		for _, stock := range stocks {
+			// 跳过B股和场内基金
 			if tools.IndexOf(config.ExcludeStockCodePrefix, stock.Code.String()[0:1]) != -1 {
 				continue
 			}
@@ -49,7 +54,7 @@ func main() {
 			}
 
 			stock.BuildStockInfo()
-			stock.IntoDb()
+			stock.ReplaceDb()
 			progress.Info[category.Id] = append(progress.Info[category.Id], stock.Code.String())
 			progress.Time = time.Now().Unix()
 			progress.Write(config.ProgressFileName)

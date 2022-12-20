@@ -145,12 +145,10 @@ func (stock *Stock) BuildStockInfo() {
 
 	stock.StockNamePinyin = NewValue(tools.GetPinyinFirstWord(stock.StockName.String()))
 	stock.MarketPlace = NewValue(marketPlaceName)
-
-	stock.IntoDb()
 }
 
-// IntoDb 更新数据库
-func (stock *Stock) IntoDb() {
+// ReplaceDb 插入更新数据库
+func (stock *Stock) ReplaceDb() {
 	sql := `
 		REPLACE INTO stock(
 			code, stock_name, stock_name_pinyin,
@@ -170,6 +168,52 @@ func (stock *Stock) IntoDb() {
 		stock.CompanyName.Val(), stock.Organization.Val(), stock.Region.Val(), stock.Address.Val(), stock.WebSite.Val(), stock.MainBusiness.Val(), stock.BusinessScope.Val(),
 		stock.DateOfIncorporation.Val(), stock.ListingDate.Val(), stock.MainUnderwriter.Val(), stock.Sponsor.Val(), stock.AccountingFirm.Val(), stock.MarketPlace.Val(),
 		stock.Category.Id,
+	}
+	db.ExecSQL(sql, args...)
+}
+
+// IntoDb 插入数据库
+func (stock *Stock) IntoDb() {
+	sql := `
+		INSERT INTO stock(
+			code, stock_name, stock_name_pinyin,
+			company_name, organization, region, address, website, main_business, business_scope,
+			date_of_incorporation, listing_date, main_underwriter, sponsor, accounting_firm, market_place,
+			category_id
+		)
+		VALUES(
+			?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?,
+			?
+		)
+	`
+	args := []interface{}{
+		stock.Code.Val(), stock.StockName.Val(), stock.StockNamePinyin.Val(),
+		stock.CompanyName.Val(), stock.Organization.Val(), stock.Region.Val(), stock.Address.Val(), stock.WebSite.Val(), stock.MainBusiness.Val(), stock.BusinessScope.Val(),
+		stock.DateOfIncorporation.Val(), stock.ListingDate.Val(), stock.MainUnderwriter.Val(), stock.Sponsor.Val(), stock.AccountingFirm.Val(), stock.MarketPlace.Val(),
+		stock.Category.Id,
+	}
+	db.ExecSQL(sql, args...)
+}
+
+// UpdateDb 更新数据库
+func (stock *Stock) UpdateDb() {
+	sql := `
+		UPDATE stock
+		SET
+			stock_name = ?, stock_name_pinyin = ?,
+			company_name = ?, organization = ?, region = ?, address = ?, website = ?, main_business = ?, business_scope = ?,
+			date_of_incorporation = ?, listing_date = ?, main_underwriter = ?, sponsor = ?, accounting_firm = ?, market_place = ?,
+			category_id = ?
+		WHERE code = ?
+	`
+	args := []interface{}{
+		stock.StockName.Val(), stock.StockNamePinyin.Val(),
+		stock.CompanyName.Val(), stock.Organization.Val(), stock.Region.Val(), stock.Address.Val(), stock.WebSite.Val(), stock.MainBusiness.Val(), stock.BusinessScope.Val(),
+		stock.DateOfIncorporation.Val(), stock.ListingDate.Val(), stock.MainUnderwriter.Val(), stock.Sponsor.Val(), stock.AccountingFirm.Val(), stock.MarketPlace.Val(),
+		stock.Category.Id,
+		stock.Code.Val(),
 	}
 	db.ExecSQL(sql, args...)
 }

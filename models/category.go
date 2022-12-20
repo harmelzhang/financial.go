@@ -57,10 +57,56 @@ func (category *Category) GetStocks() []*Stock {
 	return stocks
 }
 
-// IntoDb 更新数据库
+// Exist 是否存在
+func (category *Category) Exist() bool {
+	if category.Id == "" {
+		return false
+	}
+
+	sql := "SELECT COUNT(id) FROM category WHERE id = ?"
+	rows, err := db.GetDb().Query(sql, category.Id)
+	if err != nil {
+		log.Fatalf("SQL执行出错 : %s", err)
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	total := 0
+	if rows.Next() {
+		err = rows.Scan(&total)
+		if err != nil {
+			log.Fatalf("SQL执行出错 : %s", err)
+		}
+	}
+	if total > 0 {
+		return true
+	}
+
+	return false
+}
+
+// IntoDb 插入数据库
 func (category *Category) IntoDb() {
-	sql := "REPLACE INTO category(id, name, display_order, parent_id) VALUES(?, ?, ?, ?)"
+	sql := "INSERT INTO category(id, name, display_order, parent_id) VALUES(?, ?, ?, ?)"
 	args := []interface{}{category.Id, category.Name, category.DisplayOrder, category.ParentId}
+	if category.ParentId == "" {
+		args[len(args)-1] = nil
+	}
+	db.ExecSQL(sql, args...)
+}
+
+// UpdateDb 插入数据库
+func (category *Category) UpdateDb() {
+	sql := `
+		UPDATE category
+		SET
+		    name = ?,
+		    display_order = ?,
+		    parent_id = ?
+		WHERE id = ?
+	`
+	args := []interface{}{category.Name, category.DisplayOrder, category.ParentId, category.Id}
 	if category.ParentId == "" {
 		args[len(args)-1] = nil
 	}

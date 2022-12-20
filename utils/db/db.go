@@ -24,8 +24,13 @@ func init() {
 	}
 }
 
+// GetDb 获取数据库连接
+func GetDb() *sql.DB {
+	return db
+}
+
 // ExecSQL 执行SQL
-func ExecSQL(sql string, args ...any) *sql.Rows {
+func ExecSQL(sql string, args ...any) {
 	rows, err := db.Query(sql, args...)
 	if err != nil {
 		log.Fatalf("SQL执行出错 : %s", err)
@@ -33,6 +38,4 @@ func ExecSQL(sql string, args ...any) *sql.Rows {
 	defer func() {
 		_ = rows.Close()
 	}()
-
-	return rows
 }
