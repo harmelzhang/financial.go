@@ -25,7 +25,7 @@ type indexSampleTableInfo struct {
 }
 
 var IndexSampleTableInfo = indexSampleTableInfo{
-	table: "category_stock_code",
+	table: "index_sample",
 	columns: indexSampleColumns{
 		TypeCode:  "type_code",
 		StockCode: "stock_code",

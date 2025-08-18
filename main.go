@@ -8,6 +8,8 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"harmel.cn/financial/internal/cmd"
 	"harmel.cn/financial/internal/public"
+
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 )
 
 func main() {

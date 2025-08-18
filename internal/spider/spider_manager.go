@@ -126,7 +126,7 @@ OUT:
 
 // 最新指数样本信息
 func (s *SpiderManager) fetchIndexSample(ctx context.Context) error {
-	for typeCode, _ := range public.IndexSampleType {
+	for typeCode := range public.IndexSampleType {
 		g.Log("spider").Debugf(ctx, "start fetch %s index sample data", typeCode)
 
 		// 请求数据
@@ -353,9 +353,23 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		// 初始化操作
 		financials := make([]*model.Financial, 0, len(reportDates))
 		for _, reportDate := range reportDates {
+			ymd := strings.Split(reportDate, "-")
 			financial := &model.Financial{
 				StockCode:  stock.Code,
+				Year:       ymd[0],
 				ReportDate: reportDate,
+			}
+			switch ymd[1] {
+			case "03":
+				financial.ReportType = "Q1"
+			case "06":
+				financial.ReportType = "H1"
+			case "09":
+				financial.ReportType = "Q3"
+			case "12":
+				financial.ReportType = "FY"
+			default:
+				financial.ReportType = "O"
 			}
 			financials = append(financials, financial)
 		}
@@ -374,7 +388,14 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		}
 		// 分红数据
 		s.fetchDividendData(ctx, stock, financials)
-		// TODO 插入或更新数据库
+		// 插入或更新数据库
+		for _, financial := range financials {
+			err = service.FinancialService.Replace(ctx, financial)
+			if err != nil {
+				g.Log("spider").Errorf(ctx, "insert financial data failed, err is %v", err)
+				return
+			}
+		}
 
 		// 标记完成
 		s.progressManager.MarkTask(ctx, task.Id, true)
@@ -493,6 +514,9 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 		AccountingFirm:  baseInfo.AccountingFirm,
 		MarketPlace:     marketName,
 	}
+	if strings.TrimSpace(baseInfo.BeforeName) == "" {
+		stock.BeforeName = nil
+	}
 	if stock.BeforeName != nil {
 		stock.BeforeName = strings.ReplaceAll(fmt.Sprint(stock.BeforeName), "→", "、")
 	}
@@ -519,7 +543,7 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	}
 
 	// 资产负债表
-	url := fmt.Sprintf(public.UrlBalanceSheetReport, stock.CompanyType, shortMarketName, stock.Code)
+	url := fmt.Sprintf(public.UrlBalanceSheetReport, stock.CompanyTypeCode, shortMarketName, stock.Code)
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
@@ -534,7 +558,7 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	appendReportDate(reportDateRes)
 
 	// 利润表
-	url = fmt.Sprintf(public.UrlIncomeSheetReport, stock.CompanyType, shortMarketName, stock.Code)
+	url = fmt.Sprintf(public.UrlIncomeSheetReport, stock.CompanyTypeCode, shortMarketName, stock.Code)
 	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err = client.Get(nil)
 	if err != nil {
@@ -549,7 +573,7 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	appendReportDate(reportDateRes)
 
 	// 现金流量表
-	url = fmt.Sprintf(public.UrlCashFlowSheetReport, stock.CompanyType, shortMarketName, stock.Code)
+	url = fmt.Sprintf(public.UrlCashFlowSheetReport, stock.CompanyTypeCode, shortMarketName, stock.Code)
 	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err = client.Get(nil)
 	if err != nil {
@@ -569,7 +593,7 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 // 现金流量表
 func (s *SpiderManager) fetchCashFlowSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) {
 	_, marketShortName := s.queryStockMarketPlace(stock.Code)
-	url := fmt.Sprintf(public.UrlCashFlowSheet, stock.CompanyType, queryDates, marketShortName, stock.Code)
+	url := fmt.Sprintf(public.UrlCashFlowSheet, stock.CompanyTypeCode, queryDates, marketShortName, stock.Code)
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
@@ -582,7 +606,7 @@ func (s *SpiderManager) fetchCashFlowSheet(ctx context.Context, stock *model.Sto
 		return
 	}
 	if financialRes.Type == "1" || financialRes.Status == 1 {
-		g.Log("spider").Errorf(ctx, "fetch %s cash flow sheet data response error, type is %s status is %d", stock.Code, financialRes.Type, financialRes.Status)
+		g.Log("spider").Warningf(ctx, "fetch %s cash flow sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
 		return
 	}
 
@@ -606,7 +630,7 @@ func (s *SpiderManager) fetchCashFlowSheet(ctx context.Context, stock *model.Sto
 // 资产负债表
 func (s *SpiderManager) fetchBalanceSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) {
 	_, marketShortName := s.queryStockMarketPlace(stock.Code)
-	url := fmt.Sprintf(public.UrlBalanceSheet, stock.CompanyType, queryDates, marketShortName, stock.Code)
+	url := fmt.Sprintf(public.UrlBalanceSheet, stock.CompanyTypeCode, queryDates, marketShortName, stock.Code)
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
@@ -619,7 +643,7 @@ func (s *SpiderManager) fetchBalanceSheet(ctx context.Context, stock *model.Stoc
 		return
 	}
 	if financialRes.Type == "1" || financialRes.Status == 1 {
-		g.Log("spider").Errorf(ctx, "fetch %s balance sheet data response error, type is %s status is %d", stock.Code, financialRes.Type, financialRes.Status)
+		g.Log("spider").Warningf(ctx, "fetch %s balance sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
 		return
 	}
 
@@ -652,7 +676,7 @@ func (s *SpiderManager) fetchBalanceSheet(ctx context.Context, stock *model.Stoc
 // 利润表
 func (s *SpiderManager) fetchIncomeSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) {
 	_, marketShortName := s.queryStockMarketPlace(stock.Code)
-	url := fmt.Sprintf(public.UrlIncomeSheet, stock.CompanyType, queryDates, marketShortName, stock.Code)
+	url := fmt.Sprintf(public.UrlIncomeSheet, stock.CompanyTypeCode, queryDates, marketShortName, stock.Code)
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
@@ -665,7 +689,7 @@ func (s *SpiderManager) fetchIncomeSheet(ctx context.Context, stock *model.Stock
 		return
 	}
 	if financialRes.Type == "1" || financialRes.Status == 1 {
-		g.Log("spider").Errorf(ctx, "fetch %s balance sheet data response error, type is %s status is %d", stock.Code, financialRes.Type, financialRes.Status)
+		g.Log("spider").Warningf(ctx, "fetch %s balance sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
 		return
 	}
 
@@ -710,7 +734,7 @@ func (s *SpiderManager) fetchDividendData(ctx context.Context, stock *model.Stoc
 			financial.Dividend = dividend.Money
 		}
 	} else {
-		g.Log("spider").Errorf(ctx, "fetch %s dividend data response error, code is %s message is %s", stock.Code, dividendRes.Code, dividendRes.Message)
+		g.Log("spider").Errorf(ctx, "fetch %s dividend data response error, code is %d message is %s", stock.Code, dividendRes.Code, dividendRes.Message)
 		return
 	}
 }

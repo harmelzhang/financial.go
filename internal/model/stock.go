@@ -2,41 +2,41 @@ package model
 
 type Stock struct {
 	// 代码
-	Code string
+	Code string `json:"code"`
 	// 名称
-	Name string
+	Name string `json:"name"`
 	// 名称（拼音）
-	NamePinYin string
+	NamePinYin string `json:"name_pinyin"`
 	// 曾用名称
-	BeforeName any
+	BeforeName any `json:"before_name"`
 	// 公司名称
-	CompanyName string
+	CompanyName string `json:"company_name"`
 	// 公司类型
-	CompanyType string
+	CompanyType string `json:"company_type"`
 	// 公司类型代码
-	CompanyTypeCode string
+	CompanyTypeCode string `json:"company_type_code"`
 	// 公司简介
-	CompanyProfile string
+	CompanyProfile string `json:"company_profile"`
 	// 地域（省份）
-	Region string
+	Region string `json:"region"`
 	// 办公地址
-	Address string
+	Address string `json:"address"`
 	// 公司网站
-	Website any
+	Website any `json:"website"`
 	// 主营业务
-	MainBusiness string
+	MainBusiness string `json:"main_business"`
 	// 经营范围
-	BusinessScope string
+	BusinessScope string `json:"business_scope"`
 	// 成立日期
-	CreateDate string
+	CreateDate string `json:"create_date"`
 	// 上市日期
-	ListingDate string
+	ListingDate string `json:"listing_date"`
 	// 律师事务所
-	LawFirm string
+	LawFirm string `json:"law_firm"`
 	// 会计师事务所
-	AccountingFirm string
+	AccountingFirm string `json:"accounting_firm"`
 	// 交易市场（上海、深圳、北京）
-	MarketPlace string
+	MarketPlace string `json:"market_place"`
 }
 
 // 股票表所有列信息

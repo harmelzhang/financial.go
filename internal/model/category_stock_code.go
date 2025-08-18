@@ -2,8 +2,6 @@ package model
 
 // 行业分类与股票代码之间的关系
 type CategoryStockCode struct {
-	// 分类类型（CSRC：证监会、CICS：中证）
-	Type string
 	// 行业代码
 	CategoryCode string
 	// 股票代码
@@ -12,8 +10,6 @@ type CategoryStockCode struct {
 
 // 行业分类与股票代码关系表所有列信息
 type categoryStockCodeColumns struct {
-	// 分类类型（CSRC：证监会、CICS：中证）
-	Type string
 	// 行业代码
 	CategoryCode string
 	// 股票代码
@@ -31,7 +27,6 @@ type categoryStockCodeTableInfo struct {
 var CategoryStockCodeTableInfo = categoryStockCodeTableInfo{
 	table: "category_stock_code",
 	columns: categoryStockCodeColumns{
-		Type:         "type",
 		CategoryCode: "category_code",
 		StockCode:    "stock_code",
 	},

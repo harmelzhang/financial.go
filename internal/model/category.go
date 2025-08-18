@@ -3,17 +3,17 @@ package model
 // 行业分类
 type Category struct {
 	// 分类类型（证监会、中证）
-	Type string
+	Type string `json:"type"`
 	// 行业代码
-	Code string
+	Code string `json:"code"`
 	// 名称
-	Name string
+	Name string `json:"name"`
 	// 层级
-	Level string
+	Level string `json:"level"`
 	// 显示顺序
-	DisplayOrder int
+	DisplayOrder int `json:"display_order"`
 	// 父行业代码
-	ParentCode string
+	ParentCode any `json:"parent_code"`
 }
 
 // 行业分类表所有列信息

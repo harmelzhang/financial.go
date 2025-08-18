@@ -23,9 +23,3 @@ func (cscService *categoryStockCodeService) DeleteAll(ctx context.Context) (err 
 	err = dao.CategoryDao.DeleteAll(ctx)
 	return
 }
-
-// 删除指定类型的数据
-func (cscService *categoryStockCodeService) DeleteByType(ctx context.Context, typeName string) (err error) {
-	err = dao.CategoryStockCodeDao.DeleteByType(ctx, typeName)
-	return
-}

@@ -8,13 +8,14 @@ indexSample:
 marketPrefix:
   shanghai: ["60", "68"]
   shenzhen: ["00", "30"]
-  beijing: ["82", "83", "87", "88", "43"]
+  beijing: ["92", "82", "83", "87", "88", "43"]
 
 # 爬虫配置
 spider:
   taskIntervalDays: 7
   executorPoolSize: 3
   timeout: 5
+  queryReportPageSize: 5
 
 # Web配置
 server:

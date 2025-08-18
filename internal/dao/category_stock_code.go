@@ -22,9 +22,3 @@ func (dao *categoryStockCodeDao) DeleteAll(ctx context.Context) (err error) {
 	_, err = DB(ctx, model.CategoryStockCodeTableInfo.Table()).Delete()
 	return
 }
-
-// 删除指定类型的数据
-func (dao *categoryStockCodeDao) DeleteByType(ctx context.Context, typeName string) (err error) {
-	_, err = DB(ctx, model.CategoryStockCodeTableInfo.Table()).Where(model.CategoryStockCodeTableInfo.Columns().Type, typeName).Delete()
-	return
-}
