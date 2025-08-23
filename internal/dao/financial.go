@@ -41,3 +41,27 @@ func (dao *financialDao) Update(ctx context.Context, entity *model.Financial) (e
 		Update()
 	return
 }
+
+// 根据股票代码查询数据库中所有财报报告日期
+func (dao *financialDao) GetReportDates(ctx context.Context, stockCode string) (reportDates []string, err error) {
+	items, err := DB(ctx, model.FinancialTableInfo.Table()).
+		Fields(model.FinancialTableInfo.Columns().ReportDate).
+		Where(model.FinancialTableInfo.Columns().StockCode, stockCode).
+		Array()
+	if err != nil {
+		return
+	}
+	for _, item := range items {
+		reportDates = append(reportDates, item.String())
+	}
+	return
+}
+
+// 根据类型查询所有报告
+func (dao *financialDao) GetByType(ctx context.Context, stockCode, reportType string) (financials []*model.Financial, err error) {
+	err = DB(ctx, model.FinancialTableInfo.Table()).
+		Where(model.FinancialTableInfo.Columns().StockCode, stockCode).
+		Where(model.FinancialTableInfo.Columns().ReportType, reportType).
+		Scan(&financials)
+	return
+}

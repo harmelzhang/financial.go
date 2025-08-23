@@ -25,3 +25,8 @@ func (s *stockService) Replace(ctx context.Context, entity *model.Stock) (err er
 	}
 	return
 }
+
+// 根据股票代码查询股票信息
+func (s *stockService) FindStockByCode(ctx context.Context, stockCode string) (stock *model.Stock, err error) {
+	return dao.StockDao.FindStockByCode(ctx, stockCode)
+}

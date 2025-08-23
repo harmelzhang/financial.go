@@ -11,6 +11,8 @@ import (
 
 type CommandMainSpiderInput struct {
 	g.Meta `name:"spider" brief:"start spider server"`
+	// 爬虫抓取数据模式，默认是差异抓取（只抓取新的年份），all 表示全部重新抓取
+	Mode string `name:"mode" brief:"spider fetch mode" default:"diff"`
 }
 
 type CommandMainSpiderOutput struct{}
@@ -30,7 +32,7 @@ func (c *CommandMain) Spider(ctx context.Context, in CommandMainSpiderInput) (ou
 
 	// 启动爬虫管理器
 	spiderManager := spider.NewSpiderManager(rootDir)
-	err = spiderManager.Start(ctx)
+	err = spiderManager.Start(ctx, in.Mode)
 
 	return
 }

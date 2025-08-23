@@ -66,6 +66,9 @@ type Financial struct {
 	AccountsRece any `json:"accounts_rece"`
 	// 应付账款
 	AccountsPayable any `json:"accounts_payable"`
+
+	// 现金流量允当比例
+	CashFlowAdequacyRatio any `json:"cash_flow_adequacy_ratio"`
 }
 
 // 财务报表表所有列信息
@@ -134,6 +137,9 @@ type financialColumns struct {
 	AccountsRece string
 	// 应付账款
 	AccountsPayable string
+
+	// 现金流量允当比例
+	CashFlowAdequacyRatio string
 }
 
 // 财务报表表信息
@@ -176,6 +182,7 @@ var FinancialTableInfo = financialTableInfo{
 		Inventory:             "inventory",
 		AccountsRece:          "accounts_rece",
 		AccountsPayable:       "accounts_payable",
+		CashFlowAdequacyRatio: "cash_flow_adequacy_ratio",
 	},
 }
 

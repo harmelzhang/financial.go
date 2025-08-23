@@ -47,3 +47,11 @@ func (dao *stockDao) Update(ctx context.Context, entity *model.Stock) (err error
 		Update()
 	return
 }
+
+// 根据代码查询股票信息
+func (dao *stockDao) FindStockByCode(ctx context.Context, code string) (entity *model.Stock, err error) {
+	err = DB(ctx, model.StockTableInfo.Table()).
+		Where(model.StockTableInfo.Columns().Code, code).
+		Scan(&entity)
+	return
+}
