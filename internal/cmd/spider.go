@@ -32,6 +32,7 @@ func (c *CommandMain) Spider(ctx context.Context, in CommandMainSpiderInput) (ou
 
 	// 启动爬虫管理器
 	spiderManager := spider.NewSpiderManager(rootDir)
+	g.Log("spider").Debugf(ctx, "start spider mode is %s", in.Mode)
 	err = spiderManager.Start(ctx, in.Mode)
 
 	return

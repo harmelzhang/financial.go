@@ -3,6 +3,7 @@ package spider
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -788,7 +789,7 @@ func (s *SpiderManager) fetchDividendData(ctx context.Context, stock *model.Stoc
 	return nil
 }
 
-// TODO 计算现金流量允当比率（年报）
+// 计算现金流量允当比率（年报）
 func (s *SpiderManager) calcCashFlowAdequacyRatio(ctx context.Context, financials []*model.Financial) {
 	if len(financials) == 0 {
 		return
@@ -832,10 +833,30 @@ func (s *SpiderManager) calcCashFlowAdequacyRatio(ctx context.Context, financial
 				// 从数据库找
 				for _, dbFinancial := range dbFinancials {
 					if dbFinancial.ReportDate == ymd {
-						dbFinancial.Ocf = dbFinancial.Ocf.(*gvar.Var).Float64()
-						dbFinancial.AcquisitionAssets = dbFinancial.AcquisitionAssets.(*gvar.Var).Float64()
-						dbFinancial.AssignDividendPorfit = dbFinancial.AssignDividendPorfit.(*gvar.Var).Float64()
-						dbFinancial.InventoryLiquidating = dbFinancial.InventoryLiquidating.(*gvar.Var).Float64()
+						ofc := dbFinancial.Ocf.(*gvar.Var)
+						if !ofc.IsNil() {
+							dbFinancial.Ocf = ofc.Float64()
+						} else {
+							dbFinancial.Ocf = nil
+						}
+						acquisitionAssets := dbFinancial.AcquisitionAssets.(*gvar.Var)
+						if !acquisitionAssets.IsNil() {
+							dbFinancial.AcquisitionAssets = acquisitionAssets.Float64()
+						} else {
+							dbFinancial.AcquisitionAssets = nil
+						}
+						assignDividendPorfit := dbFinancial.AssignDividendPorfit.(*gvar.Var)
+						if !assignDividendPorfit.IsNil() {
+							dbFinancial.AssignDividendPorfit = assignDividendPorfit.Float64()
+						} else {
+							dbFinancial.AssignDividendPorfit = nil
+						}
+						inventoryLiquidating := dbFinancial.InventoryLiquidating.(*gvar.Var)
+						if !inventoryLiquidating.IsNil() {
+							dbFinancial.InventoryLiquidating = inventoryLiquidating.Float64()
+						} else {
+							dbFinancial.InventoryLiquidating = nil
+						}
 						reportDatas = append(reportDatas, dbFinancial)
 						break
 					}
@@ -847,25 +868,26 @@ func (s *SpiderManager) calcCashFlowAdequacyRatio(ctx context.Context, financial
 		}
 		/**
 		现金流量允当比率 = 最近五年营业活动净现金流/最近五年(资本支出+现金股利+存货增加)
-		计算：营业活动现金流量 / (购建固定资产、无形资产和其他长期资产支付的现金 + 分配股利、利润或偿付利息支付的现金 - 存货减少额)
+		计算：营业活动现金流量 / (购建固定资产、无形资产和其他长期资产支付的现金 + 分配股利、利润或偿付利息支付的现金 + 存货增加额)
 		*/
 		var numerator, denominator float64
 		// 如果有一年没数据就跳过
 		hasNull := false
-		for _, data := range reportDatas {
-			if data == nil || data.Ocf == nil {
+		for _, item := range reportDatas {
+			if item == nil || item.Ocf == nil || item.AcquisitionAssets == nil || item.AssignDividendPorfit == nil || item.InventoryLiquidating == nil {
 				hasNull = true
 				break
 			}
-			numerator += data.Ocf.(float64)
-			if data.AcquisitionAssets != nil {
-				denominator += data.AcquisitionAssets.(float64)
+			numerator += item.Ocf.(float64)
+			if item.AcquisitionAssets != nil {
+				denominator += item.AcquisitionAssets.(float64)
 			}
-			if data.AssignDividendPorfit != nil {
-				denominator += data.AssignDividendPorfit.(float64)
+			if item.AssignDividendPorfit != nil {
+				denominator += item.AssignDividendPorfit.(float64)
 			}
-			if data.InventoryLiquidating != nil {
-				denominator -= data.InventoryLiquidating.(float64)
+			// 由于财报只有“存货减少额”所以需要判断是否为负数，负数表示增加
+			if item.InventoryLiquidating != nil && item.InventoryLiquidating.(float64) < 0 {
+				denominator += math.Abs(item.InventoryLiquidating.(float64))
 			}
 		}
 

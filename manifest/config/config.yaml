@@ -14,7 +14,7 @@ marketPrefix:
 # 爬虫配置
 spider:
   taskIntervalDays: 7
-  executorPoolSize: 3
+  executorPoolSize: 10
   timeout: 5
   queryReportPageSize: 5
 
