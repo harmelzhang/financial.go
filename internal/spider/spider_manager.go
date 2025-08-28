@@ -64,11 +64,6 @@ func (s *SpiderManager) Start(ctx context.Context, mode string) (err error) {
 		return err
 	}
 
-	// 如果到了五月一日，清空所有任务全部重跑（年报全部出了）
-	if time.Now().Format("01-02") == "05-01" {
-		s.progressManager.ClearTasks()
-	}
-
 	// 如果上次成功了，判断时间是否大于等于配置天数
 	if s.progressManager.Done() {
 		if time.Now().Unix()-s.progressManager.LastTS() >= public.SpiderTaskIntervalDays*24*3600 {
