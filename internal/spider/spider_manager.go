@@ -893,19 +893,14 @@ func (s *SpiderManager) calcFinancialRatios(ctx context.Context, stock *model.St
 	sql := `
 		UPDATE financial
 		SET
-		    oi = IF(oi = 0, NULL, oi),
-		    coe = IF(coe = 0, NULL, coe),
-		    np = IF(np = 0, NULL, np),
-
 		    asset_total = IF(ca_total IS NULL AND nca_total IS NULL, NULL, IFNULL(ca_total, 0) + IFNULL(nca_total, 0)),
-		    asset_total = IF(asset_total = 0, NULL, asset_total),
 
 		    liability_total = IF(cl_total IS NULL AND ncl_total IS NULL, NULL, IFNULL(cl_total, 0) + IFNULL(ncl_total, 0)),
 		    np_ratio = ROUND(np / oi * 100, 2),
 		    dividend_ratio = ROUND(dividend / np * 100, 2),
 		    oi_ratio = ROUND((oi - coe) / oi * 100, 2),
 		    operating_profit_ratio = ROUND((oi - coe_total) / oi * 100, 2),
-		    operating_safety_ratio = IF(oi_ratio = 0, NUll, ROUND(operating_profit_ratio / oi_ratio * 100, 2)),
+		    operating_safety_ratio = IF(oi_ratio = 0, NULL, ROUND(operating_profit_ratio / oi_ratio * 100, 2)),
 		    cash_equivalent_ratio = ROUND((monetary_fund + IFNULL(IFNULL(trade_finasset, trade_finasset_notfvtpl), 0) + IFNULL(derive_finasset, 0)) / asset_total * 100, 2),
 		    cash_ratio = IF(cl_total = 0, NULL, ROUND(monetary_fund / cl_total * 100, 2)),
 		    ca_ratio = ROUND(ca_total / asset_total * 100, 2),
@@ -914,14 +909,14 @@ func (s *SpiderManager) calcFinancialRatios(ctx context.Context, stock *model.St
 		    debt_ratio = ROUND((cl_total + ncl_total) / asset_total * 100, 2),
 		    long_term_funds_ratio = IF((fixed_asset + cip) = 0, NULL, ROUND((ncl_total + (asset_total - liability_total)) / (fixed_asset + cip) * 100, 2)),
 		    equity_ratio = ROUND(100 - debt_ratio, 2),
-		    equity_multiplier = IF((asset_total - liability_total) = 0, NUll, ROUND(asset_total / (asset_total - liability_total), 2)),
+		    equity_multiplier = IF((asset_total - liability_total) = 0, NULL, ROUND(asset_total / (asset_total - liability_total), 2)),
 		    capitalization_ratio = IF((asset_total - liability_total) = 0, NULL, ROUND((cl_total + ncl_total) / (asset_total - liability_total) * 100, 2)),
 		    inventory_ratio = ROUND(inventory / asset_total * 100, 2),
 		    accounts_rece_ratio = ROUND(accounts_rece / asset_total * 100, 2),
 		    accounts_payable_ratio = ROUND(accounts_payable / asset_total * 100, 2),
 		    current_ratio = IF(cl_total = 0, NULL, ROUND(ca_total / cl_total * 100, 2)),
 		    quick_ratio = IF(cl_total = 0, NULL, ROUND((ca_total - inventory) / cl_total * 100, 2)),
-		    roe = IF((asset_total - cl_total - ncl_total) = 0, NUll, ROUND(np / (asset_total - cl_total - ncl_total) * 100, 2)),
+		    roe = IF((asset_total - cl_total - ncl_total) = 0, NULL, ROUND(np / (asset_total - cl_total - ncl_total) * 100, 2)),
 		    roa = ROUND(np / asset_total * 100, 2),
 		    accounts_rece_turnover_ratio = ROUND(oi / IF(accounts_rece = 0, NULL, accounts_rece), 2),
 		    average_cash_receipt_days = ROUND(360 / IF(accounts_rece_turnover_ratio = 0, NULL, accounts_rece_turnover_ratio), 2),
