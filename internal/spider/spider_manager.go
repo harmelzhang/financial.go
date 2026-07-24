@@ -3,7 +3,6 @@ package spider
 import (
 	"context"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -874,16 +873,10 @@ func (s *SpiderManager) calcCashFlowAdequacyRatio(ctx context.Context, financial
 				break
 			}
 			numerator += item.Ocf.(float64)
-			if item.AcquisitionAssets != nil {
-				denominator += item.AcquisitionAssets.(float64)
-			}
-			if item.AssignDividendPorfit != nil {
-				denominator += item.AssignDividendPorfit.(float64)
-			}
-			// 由于财报只有“存货减少额”所以需要判断是否为负数，负数表示增加
-			if item.InventoryLiquidating != nil && item.InventoryLiquidating.(float64) < 0 {
-				denominator += math.Abs(item.InventoryLiquidating.(float64))
-			}
+			denominator += item.AcquisitionAssets.(float64)
+			denominator += item.AssignDividendPorfit.(float64)
+			// 由于财报只有"存货减少额"，这里直接减（正数表示减少，负数表示增加，公式自动适配）
+			denominator -= item.InventoryLiquidating.(float64)
 		}
 
 		if denominator == 0 {
