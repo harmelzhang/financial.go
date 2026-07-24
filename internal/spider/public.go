@@ -1,8 +1,14 @@
 package spider
 
+import "github.com/gogf/gf/v2/frame/g"
+
 const (
 	// 待处理任务初始化容量
 	PENDING_TASKS_INIT_CAPACITY = 10000
+)
+
+var (
+	spiderLogger = g.Log("spider")
 )
 
 // 任务

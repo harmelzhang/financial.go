@@ -14,23 +14,25 @@ import (
 
 func main() {
 	ctx := gctx.New()
+	gCfg := g.Cfg()
 
 	// 指数样本类型
-	for code, name := range g.Cfg().MustGet(ctx, "indexSample").Map() {
+	for code, name := range gCfg.MustGet(ctx, "indexSample").Map() {
 		public.IndexSampleType[code] = fmt.Sprint(name)
 	}
 	// 市场标识前缀
-	for key, value := range g.Cfg().MustGet(ctx, "marketPrefix").Map() {
+	for key, value := range gCfg.MustGet(ctx, "marketPrefix").Map() {
 		anyValues := value.([]any)
 		values := make([]string, 0, len(anyValues))
 		for _, v := range anyValues {
 			values = append(values, fmt.Sprint(v))
 		}
-		if key == "shanghai" {
+		switch key {
+		case "shanghai":
 			public.ShanghaiMarketPrefixs = values
-		} else if key == "shenzhen" {
+		case "shenzhen":
 			public.ShenzhenMarketPrefixs = values
-		} else if key == "beijing" {
+		case "beijing":
 			public.BeijingMarketPrefixs = values
 		}
 	}

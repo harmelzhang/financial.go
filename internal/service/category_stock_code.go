@@ -17,9 +17,3 @@ func (cscService *categoryStockCodeService) Insert(ctx context.Context, entity *
 	err = dao.CategoryStockCodeDao.Insert(ctx, entity)
 	return
 }
-
-// 删除所有数据
-func (cscService *categoryStockCodeService) DeleteAll(ctx context.Context) (err error) {
-	err = dao.CategoryDao.DeleteAll(ctx)
-	return
-}

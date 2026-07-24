@@ -8,8 +8,6 @@ import (
 	"path"
 	"sync"
 	"time"
-
-	"github.com/gogf/gf/v2/frame/g"
 )
 
 const (
@@ -116,7 +114,7 @@ func (pm *ProgressManager) MarkTask(ctx context.Context, id string, isFinished b
 		}
 	}
 	if idx == -1 {
-		g.Log("spider").Warningf(ctx, "task %s is not on the tasks list", id)
+		spiderLogger.Warningf(ctx, "task %s is not on the tasks list", id)
 	} else {
 		pm.Tasks[idx].IsFinished = isFinished
 		finishedCnt++
@@ -152,18 +150,18 @@ func (pm *ProgressManager) LastTS() int64 {
 func (pm *ProgressManager) Load(ctx context.Context) (err error) {
 	// 存在进度文件则加载
 	if _, err = os.Stat(pm.filePath); err == nil {
-		g.Log("spider").Debugf(ctx, "found process file %s and load", PROGRESS_FILE_NAME)
+		spiderLogger.Debugf(ctx, "found process file %s and load", PROGRESS_FILE_NAME)
 		byteValues, rErr := os.ReadFile(pm.filePath)
 		if rErr != nil {
 			return rErr
 		}
 		err = json.Unmarshal(byteValues, pm)
 		if err == nil {
-			g.Log("spider").Debugf(ctx, "process file %s load success", PROGRESS_FILE_NAME)
+			spiderLogger.Debugf(ctx, "process file %s load success", PROGRESS_FILE_NAME)
 		}
 		return
 	} else {
-		g.Log("spider").Debugf(ctx, "process file %s not found skip load", PROGRESS_FILE_NAME)
+		spiderLogger.Debugf(ctx, "process file %s not found skip load", PROGRESS_FILE_NAME)
 		return nil
 	}
 }

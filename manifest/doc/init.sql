@@ -20,7 +20,7 @@ CREATE TABLE `category` (
     `parent_code` CHAR(8) DEFAULT NULL COMMENT '父分类Code',
     PRIMARY KEY (`code`),
     KEY `i_parent_code` (`parent_code`) USING BTREE,
-    CONSTRAINT `fk_parent_code` FOREIGN KEY (`parent_code`) REFERENCES `category` (`code`) ON DELETE SET NULL
+    CONSTRAINT `fk_parent_code` FOREIGN KEY (`parent_code`) REFERENCES `category` (`code`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='行业分类';
 
 DROP TABLE IF EXISTS `category_stock_code`;
@@ -60,7 +60,6 @@ CREATE TABLE `stock` (
 DROP TABLE IF EXISTS `financial`;
 CREATE TABLE `financial` (
     `stock_code` CHAR(6) NOT NULL COMMENT '股票代码',
-    `year` CHAR(4) NOT NULL COMMENT '年份',
     `report_date` DATE NOT NULL COMMENT '财报季期',
     `report_type` VARCHAR(2) NOT NULL COMMENT '季期类型（Q1、H1、Q3、FY，分别代表：一季报、半年报、三季报、年报；O，代表：其他）',
     `dividend` DOUBLE DEFAULT NULL COMMENT '年度分红总金额',
@@ -122,5 +121,5 @@ CREATE TABLE `financial` (
     `cash_flow_adequacy_ratio` DOUBLE DEFAULT NULL COMMENT '现金流量允当比率：近五年营业活动现金流量 / 近五年(购建固定资产、无形资产和其他长期资产支付的现金 + 分配股利、利润或偿付利息支付的现金 - 存货减少额)',
     `cash_reinvestment_ratio` DOUBLE DEFAULT NULL COMMENT '现金再投资比率：(经营活动产生的现金流量净额 - 现金股利) / (流动资产总额 + 非流动资产总额 - 流动负债总额)',
     `profit_cash_ratio` DOUBLE DEFAULT NULL COMMENT '盈利现金比率：营业活动现金流量 / 净利润',
-    PRIMARY KEY (`stock_code`, `year`, `report_date`)
+    PRIMARY KEY (`stock_code`, `report_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8 COMMENT='财务报表';

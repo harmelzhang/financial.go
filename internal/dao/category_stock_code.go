@@ -16,9 +16,3 @@ func (dao *categoryStockCodeDao) Insert(ctx context.Context, entity *model.Categ
 	_, err = DB(ctx, model.CategoryStockCodeTableInfo.Table()).Insert(entity)
 	return
 }
-
-// 删除所有数据
-func (dao *categoryStockCodeDao) DeleteAll(ctx context.Context) (err error) {
-	_, err = DB(ctx, model.CategoryStockCodeTableInfo.Table()).Delete()
-	return
-}

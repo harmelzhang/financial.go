@@ -55,12 +55,12 @@ func NewSpiderManager(rootDir string) *SpiderManager {
 // 开启爬虫
 func (s *SpiderManager) Start(ctx context.Context, mode string) (err error) {
 	s.Mode = mode
-	g.Log("spider").Debugf(ctx, "spider is running")
+	spiderLogger.Debugf(ctx, "spider is running")
 
 	// 加载历史进度
 	err = s.progressManager.Load(ctx)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "ProgressManager.Load failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "ProgressManager.Load failed, err is %v", err)
 		return err
 	}
 
@@ -69,20 +69,20 @@ func (s *SpiderManager) Start(ctx context.Context, mode string) (err error) {
 		if time.Now().Unix()-s.progressManager.LastTS() >= public.SpiderTaskIntervalDays*24*3600 {
 			s.progressManager.ClearTasks()
 		} else {
-			g.Log("spider").Debugf(ctx, "task finish, the time since the last successful task completion is less than %d days", public.SpiderTaskIntervalDays)
+			spiderLogger.Debugf(ctx, "task finish, the time since the last successful task completion is less than %d days", public.SpiderTaskIntervalDays)
 			return
 		}
 	}
 
-	// 基础数据
+	// 基础数据（指数样本、行业分类）
 	err = s.fetchIndexSample(ctx)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "fetch index sample data failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "fetch index sample data failed, err is %v", err)
 		return
 	}
 	err = s.fetchCategory(ctx)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "fetch category data failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "fetch category data failed, err is %v", err)
 		return
 	}
 
@@ -94,7 +94,7 @@ OUT:
 	for {
 		select {
 		case <-s.finishNotify:
-			g.Log("spider").Debug(ctx, "all task execute finish")
+			spiderLogger.Debug(ctx, "all task execute finish")
 			break OUT
 		default:
 			time.Sleep(2 * time.Second)
@@ -105,7 +105,7 @@ OUT:
 					s.progressManager.SetDone()
 					err = s.progressManager.Save(ctx)
 					if err != nil {
-						g.Log("spider").Errorf(ctx, "save process failed, err is %v", err)
+						spiderLogger.Errorf(ctx, "save process failed, err is %v", err)
 					}
 					return
 				}
@@ -121,22 +121,22 @@ OUT:
 
 // 最新指数样本信息
 func (s *SpiderManager) fetchIndexSample(ctx context.Context) error {
-	for typeCode := range public.IndexSampleType {
-		g.Log("spider").Debugf(ctx, "start fetch %s index sample data", typeCode)
+	for typeCode, typeName := range public.IndexSampleType {
+		spiderLogger.Debugf(ctx, "start fetch %s index sample data", typeCode)
 
 		// 请求数据
 		url := fmt.Sprintf(public.UrlIndexSample, typeCode)
 		client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 		body, _, err := client.Get(nil)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 			continue
 		}
 
 		// 读取Excel
 		items, err := xls.ReadXls(body, 0, 1)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "read xls failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "read xls failed, err is %v", err)
 			continue
 		}
 
@@ -150,11 +150,11 @@ func (s *SpiderManager) fetchIndexSample(ctx context.Context) error {
 			}
 			err = service.IndexSampleService.Insert(ctx, indexSample)
 			if err != nil {
-				g.Log("spider").Errorf(ctx, "insert index sample failed, TypeCode is %s StockCode is %s err is %v", typeCode, stockCode, err)
+				spiderLogger.Errorf(ctx, "insert index sample failed, TypeCode is %s StockCode is %s err is %v", typeCode, stockCode, err)
 			}
 		}
 
-		g.Log("spider").Debugf(ctx, "fetch %s index sample data success", typeCode)
+		spiderLogger.Debugf(ctx, "fetch %s %s index sample data success", typeCode, typeName)
 	}
 	return nil
 }
@@ -162,33 +162,33 @@ func (s *SpiderManager) fetchIndexSample(ctx context.Context) error {
 // 最新行业分类信息（含分类下的股票）
 func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 	for typeName, typeValue := range public.CategoryType {
-		g.Log("spider").Debugf(ctx, "start fetch %s catagory data", typeName)
+		spiderLogger.Debugf(ctx, "start fetch %s catagory data", typeName)
 
 		// 查询行业分类
 		url := fmt.Sprintf(public.UrlCategory, typeValue)
 		client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 		body, _, err := client.Get(nil)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 			continue
 		}
 
 		categoryRes, err := http.ParseResponse[response.CategoryResult](body)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 			continue
 		}
 		if categoryRes.Code == "200" && categoryRes.Success {
 			// 删除数据库中指定类型的分类数据（同时会级联删除行业下股票信息）
 			err = service.CategoryService.DeleteByType(ctx, typeName)
 			if err != nil {
-				g.Log("spider").Warningf(ctx, "delete category type %s data failed, err is %v", typeName, err)
+				spiderLogger.Warningf(ctx, "delete category type %s data failed, err is %v", typeName, err)
 				continue
 			}
 			// 递归插入新数据
 			s.recursionCategorys(ctx, typeName, categoryRes.Data.MapList["4"])
 		} else {
-			g.Log("spider").Errorf(ctx, "fetch %s category data response error, code is %s", typeName, categoryRes.Code)
+			spiderLogger.Errorf(ctx, "fetch %s category data response error, code is %s", typeName, categoryRes.Code)
 			continue
 		}
 
@@ -197,13 +197,13 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 		client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 		body, _, err = client.Get(nil)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 			continue
 		}
 
 		stockCodeRes, err := http.ParseResponse[response.StockCodeResult](body)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 			continue
 		}
 		if stockCodeRes.Code == "200" && stockCodeRes.Success {
@@ -230,7 +230,7 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 				}
 				err := service.CategoryStockCodeService.Insert(ctx, categoryStockCode)
 				if err != nil {
-					g.Log("spider").Warningf(ctx, "insert categroy stock code failed, err is %v", err)
+					spiderLogger.Warningf(ctx, "insert categroy stock code failed, err is %v", err)
 				}
 				//  丢入任务列表
 				task := PendingTask{Id: stock.Code}
@@ -240,11 +240,11 @@ func (s *SpiderManager) fetchCategory(ctx context.Context) error {
 				}
 			}
 		} else {
-			g.Log("spider").Errorf(ctx, "fetch %s category stock code data response error, code is %s", typeName, categoryRes.Code)
+			spiderLogger.Errorf(ctx, "fetch %s category stock code data response error, code is %s", typeName, categoryRes.Code)
 			continue
 		}
 
-		g.Log("spider").Debugf(ctx, "fetch %s catagory data success", typeName)
+		spiderLogger.Debugf(ctx, "fetch %s catagory data success", typeName)
 	}
 
 	return nil
@@ -270,7 +270,7 @@ func (s *SpiderManager) recursionCategorys(ctx context.Context, typeName string,
 		// 插入数据库
 		err := service.CategoryService.Insert(ctx, mCategory)
 		if err != nil {
-			g.Log("spider").Warningf(ctx, "insert category data failed, err is %v", err)
+			spiderLogger.Warningf(ctx, "insert category data failed, err is %v", err)
 			continue
 		}
 		if len(category.Children) != 0 {
@@ -283,7 +283,7 @@ func (s *SpiderManager) recursionCategorys(ctx context.Context, typeName string,
 func (s *SpiderManager) doProcTaskWorker(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			g.Log("spiser").Critical(ctx, "doProcTaskWorker panic: %v", err)
+			spiderLogger.Critical(ctx, "doProcTaskWorker panic: %v", err)
 		}
 	}()
 
@@ -291,19 +291,9 @@ func (s *SpiderManager) doProcTaskWorker(ctx context.Context) {
 		task := <-s.taskChan
 		err := s.executeTask(ctx, task)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "execute task failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "execute task failed, err is %v", err)
 		}
 	}
-}
-
-// 根据股票代码和报告期查询索引位置
-func (s *SpiderManager) findFinancialIndex(stockCode, reportDate string, financials []*model.Financial) int {
-	for idx, financial := range financials {
-		if financial.StockCode == stockCode && financial.ReportDate == reportDate {
-			return idx
-		}
-	}
-	return -1
 }
 
 // 执行实际任务
@@ -317,26 +307,26 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		// 是否处理完
 		isFinished, err := s.progressManager.TaskStatus(ctx, task.Id)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "query task status failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "query task status failed, err is %v", err)
 			return
 		}
 		if isFinished {
 			return
 		}
 
-		g.Log("spider").Debugf(ctx, "start execute task %s", task.Id)
+		spiderLogger.Debugf(ctx, "start execute task %s", task.Id)
 
 		// 基本信息
 		stock, err := s.fetchStockBaseInfo(ctx, task.Id)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s base info failed, err is %v", stock.Code, err)
+			spiderLogger.Errorf(ctx, "fetch stock %s base info failed, err is %v", stock.Code, err)
 			return
 		}
 
 		// 查询所有报告期
 		reportDates, err := s.queryAllReportData(ctx, stock)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "fetch stock %s report date info failed, err is %v", stock.Code, err)
+			spiderLogger.Errorf(ctx, "fetch stock %s report date info failed, err is %v", stock.Code, err)
 			return
 		}
 
@@ -367,7 +357,7 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		// 分页查询财报
 		reportDatePages, totalPages := slice.ArraySlice(reportDates, public.QueryReportPageSize)
 		for i, reportDates := range reportDatePages {
-			g.Log("spider").Debugf(ctx, "fetch stock %s report info page %d/%d", stock.Code, i+1, totalPages)
+			spiderLogger.Debugf(ctx, "fetch stock %s report info page %d/%d", stock.Code, i+1, totalPages)
 			queryDates := strings.Join(reportDates, ",")
 			// 现金流量表
 			err = s.fetchCashFlowSheet(ctx, stock, queryDates, financials)
@@ -398,7 +388,7 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		for _, financial := range financials {
 			err = service.FinancialService.Replace(ctx, financial)
 			if err != nil {
-				g.Log("spider").Errorf(ctx, "insert financial data failed, err is %v", err)
+				spiderLogger.Errorf(ctx, "insert financial data failed, err is %v", err)
 				return
 			}
 		}
@@ -406,7 +396,7 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		// 比率
 		err = s.calcFinancialRatios(ctx, stock)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "calc %s financial ratios failed, err is %v", stock.Code, err)
+			spiderLogger.Errorf(ctx, "calc %s financial ratios failed, err is %v", stock.Code, err)
 			return
 		}
 
@@ -416,11 +406,11 @@ func (s *SpiderManager) executeTask(ctx context.Context, task PendingTask) (err 
 		// 写入磁盘
 		err = s.progressManager.Save(ctx)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "save process failed, err is %v", err)
+			spiderLogger.Errorf(ctx, "save process failed, err is %v", err)
 			return
 		}
 
-		g.Log("spider").Debugf(ctx, "task %s execute success", task.Id)
+		spiderLogger.Debugf(ctx, "task %s execute success", task.Id)
 
 		// 通知完成
 		if s.progressManager.Done() {
@@ -449,7 +439,7 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	if s.Mode == public.SpiderModeDiff {
 		stock, err = service.StockService.FindStockByCode(ctx, stockCode)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "find stock %s by code failed, err is %v", stockCode, err)
+			spiderLogger.Errorf(ctx, "find stock %s by code failed, err is %v", stockCode, err)
 			return
 		}
 		if stock != nil {
@@ -464,14 +454,14 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return
 	}
 
 	companyType, companyTypeCode := "普通", "4"
 	companyTypeRes, err := http.ParseResponse[response.CompanyTypeResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 	}
 	if companyTypeRes.Success && companyTypeRes.Code == 0 {
 		if companyTypeRes.Result.Count != 0 {
@@ -485,12 +475,12 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err = client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 	}
 
 	mainBusinessResult, err := http.ParseResponse[response.MainBusinessResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return
 	}
 
@@ -498,7 +488,7 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	if mainBusinessResult.Code == 0 && mainBusinessResult.Success {
 		mainBusiness = mainBusinessResult.Result.Data[0].Info
 	} else {
-		g.Log("spider").Errorf(ctx, "fetch %s main business data response error, code is %d", stockCode, mainBusinessResult.Code)
+		spiderLogger.Errorf(ctx, "fetch %s main business data response error, code is %d", stockCode, mainBusinessResult.Code)
 	}
 
 	// 主要信息
@@ -506,13 +496,13 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err = client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return
 	}
 
 	baseInfoRes, err := http.ParseResponse[response.StockBaseInfoResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return
 	}
 	baseInfo := baseInfoRes.BaseInfo[0]
@@ -546,7 +536,7 @@ func (s *SpiderManager) fetchStockBaseInfo(ctx context.Context, stockCode string
 	}
 	err = service.StockService.Replace(ctx, stock)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "replace db stock failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "replace db stock failed, err is %v", err)
 		return
 	}
 
@@ -571,7 +561,7 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	if s.Mode == public.SpiderModeDiff {
 		dbReportDatas, err = service.FinancialService.GetReportDates(ctx, stock.Code)
 		if err != nil {
-			g.Log("spider").Errorf(ctx, "get report dates failed, stock code is %s err is %v", stock.Code, err)
+			spiderLogger.Errorf(ctx, "get report dates failed, stock code is %s err is %v", stock.Code, err)
 			return nil, err
 		}
 	}
@@ -581,12 +571,12 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return
 	}
 	reportDateRes, err := http.ParseResponse[response.ReportDateResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return
 	}
 	appendReportDate(reportDateRes)
@@ -596,12 +586,12 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err = client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return
 	}
 	reportDateRes, err = http.ParseResponse[response.ReportDateResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return
 	}
 	appendReportDate(reportDateRes)
@@ -611,12 +601,12 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	client = http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err = client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return
 	}
 	reportDateRes, err = http.ParseResponse[response.ReportDateResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return
 	}
 	appendReportDate(reportDateRes)
@@ -631,6 +621,16 @@ func (s *SpiderManager) queryAllReportData(ctx context.Context, stock *model.Sto
 	return
 }
 
+// 根据股票代码和报告期查询索引位置
+func (s *SpiderManager) findFinancialIndex(stockCode, reportDate string, financials []*model.Financial) int {
+	for idx, financial := range financials {
+		if financial.StockCode == stockCode && financial.ReportDate == reportDate {
+			return idx
+		}
+	}
+	return -1
+}
+
 // 现金流量表
 func (s *SpiderManager) fetchCashFlowSheet(ctx context.Context, stock *model.Stock, queryDates string, financials []*model.Financial) error {
 	_, marketShortName := s.queryStockMarketPlace(stock.Code)
@@ -638,16 +638,16 @@ func (s *SpiderManager) fetchCashFlowSheet(ctx context.Context, stock *model.Sto
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return err
 	}
 	financialRes, err := http.ParseResponse[response.FinancialResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return err
 	}
 	if financialRes.Type == "1" || financialRes.Status == 1 {
-		g.Log("spider").Warningf(ctx, "fetch %s cash flow sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
+		spiderLogger.Warningf(ctx, "fetch %s cash flow sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
 		return err
 	}
 
@@ -676,16 +676,16 @@ func (s *SpiderManager) fetchBalanceSheet(ctx context.Context, stock *model.Stoc
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return err
 	}
 	financialRes, err := http.ParseResponse[response.FinancialResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return err
 	}
 	if financialRes.Type == "1" || financialRes.Status == 1 {
-		g.Log("spider").Warningf(ctx, "fetch %s balance sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
+		spiderLogger.Warningf(ctx, "fetch %s balance sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
 		return err
 	}
 
@@ -723,16 +723,16 @@ func (s *SpiderManager) fetchIncomeSheet(ctx context.Context, stock *model.Stock
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return err
 	}
 	financialRes, err := http.ParseResponse[response.FinancialResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return err
 	}
 	if financialRes.Type == "1" || financialRes.Status == 1 {
-		g.Log("spider").Warningf(ctx, "fetch %s balance sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
+		spiderLogger.Warningf(ctx, "fetch %s balance sheet data response error, type is %s status is %d, url is %s", stock.Code, financialRes.Type, financialRes.Status, url)
 		return err
 	}
 
@@ -759,12 +759,12 @@ func (s *SpiderManager) fetchDividendData(ctx context.Context, stock *model.Stoc
 	client := http.New(url, time.Duration(public.SpiderTimtout)*time.Second)
 	body, _, err := client.Get(nil)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "request url failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "request url failed, err is %v", err)
 		return err
 	}
 	dividendRes, err := http.ParseResponse[response.DividendResult](body)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "parse response failed, err is %v", err)
+		spiderLogger.Errorf(ctx, "parse response failed, err is %v", err)
 		return err
 	}
 	if dividendRes.Code == 0 && dividendRes.Success {
@@ -778,7 +778,7 @@ func (s *SpiderManager) fetchDividendData(ctx context.Context, stock *model.Stoc
 			financial.Dividend = dividend.Money
 		}
 	} else {
-		g.Log("spider").Errorf(ctx, "fetch %s dividend data response error, code is %d message is %s", stock.Code, dividendRes.Code, dividendRes.Message)
+		spiderLogger.Errorf(ctx, "fetch %s dividend data response error, code is %d message is %s", stock.Code, dividendRes.Code, dividendRes.Message)
 		return err
 	}
 	return nil
@@ -805,7 +805,7 @@ func (s *SpiderManager) calcCashFlowAdequacyRatio(ctx context.Context, financial
 	// 查询数据库
 	dbFinancials, err := service.FinancialService.GetByType(ctx, financials[0].StockCode, public.ReportTypeFY)
 	if err != nil {
-		g.Log("spider").Errorf(ctx, "get %s financial data by type failed, err is %v", financials[0].StockCode, err)
+		spiderLogger.Errorf(ctx, "get %s financial data by type failed, err is %v", financials[0].StockCode, err)
 		return
 	}
 

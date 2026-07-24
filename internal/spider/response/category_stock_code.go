@@ -14,7 +14,7 @@ type StockCode struct {
 	CicsLeve4Code string `json:"cics4thCode"`
 	// 证券会1级代码
 	CsrcLeve1Code string `json:"csrc1stCode"`
-	// 证券会1级代码
+	// 证券会2级代码
 	CsrcLeve2Code string `json:"csrc2ndCode"`
 }
 
